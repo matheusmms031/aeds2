@@ -1,7 +1,7 @@
 import java.io.File;
-import java.util.Locale;
-import java.text.DecimalFormat;
 import java.io.FileNotFoundException;
+import java.text.DecimalFormat;
+import java.util.Locale;
 import java.util.Scanner;
 
 public class Main{
@@ -194,43 +194,103 @@ public class Main{
             this.size = 0;
         }
 
+        public String formatAll(){
+            DecimalFormat df = new DecimalFormat("#.##");
+            CellVeiculo tempE = this.init;
+            String returnValue = "";
+            for(int i = 0; i < this.size; i++, tempE = tempE.prox){
+                String combValue = "[";
+                for(int j = 0; j < tempE.val.combustivel.length-1; j++){
+                    combValue = combValue + tempE.val.combustivel[j] + ",";
+                }
+                combValue = combValue + tempE.val.combustivel[tempE.val.combustivel.length-1] + "]";
+                returnValue += String.format("[%d ## %s ## %s ## %d ## %s ## %s ## %d ## %s ## %s ## %s ## %s ## %s ## %s ## %b ## %s]\n",tempE.val.id,tempE.val.marca,tempE.val.modelo,tempE.val.ano,tempE.val.categoria,combValue,tempE.val.cilindros, df.format(tempE.val.cilindrada),tempE.val.transmissao,tempE.val.tracao,df.format(tempE.val.consumo_cidade), df.format(tempE.val.consumo_estrada),df.format(tempE.val.co2),tempE.val.turbo,tempE.val.data_registro.format());
+            }
+            return returnValue;
+        }
+
         public void inserirInicio(Veiculo entryVeiculo){
-            CellVeiculo entryVeiculo = new CellVeiculo(entryVeiculo); // CellVeiculo entryVeiculo | entryVeiculo.prox() -> null
-            if(this.init != null || this.end != null){
+            CellVeiculo entryVeiculoCelula = new CellVeiculo(entryVeiculo); // CellVeiculo entryVeiculo | entryVeiculo.prox() -> null
+            if(this.init != null || this.end != null || this.size > 0){
                 CellVeiculo CellTemp = this.init; 
-                this.init = entryVeiculo;
+                this.init = entryVeiculoCelula;
                 this.init.prox = CellTemp;
                 this.size++;
             } else{
-                this.init = entryVeiculo;
+                this.init = entryVeiculoCelula;
                 this.init.prox = this.end;
-                this.end = entryVeiculo;
+                this.end = entryVeiculoCelula;
+                this.size++;
             }
         }
 
         public void inserirFim(Veiculo entryVeiculo){
-            CellVeiculo entryVeiculo = new CellVeiculo(entryVeiculo);
-            if(this.init != null || this.end != null){
-                CellVeiculo CellTemp = this.end;
-                this.end.prox = entryVeiculo;
-                this.end = entryVeiculo;
+            CellVeiculo entryVeiculoCelula = new CellVeiculo(entryVeiculo);
+            if(this.init != null || this.end != null || this.size > 0){
+                this.end.prox = entryVeiculoCelula;
+                this.end = entryVeiculoCelula;
                 this.end.prox = null;
                 this.size++;
             } else{
-                this.init = entryVeiculo;
-                this.end = entryVeiculo;
+                this.init = entryVeiculoCelula;
+                this.end = entryVeiculoCelula;
                 this.init.prox = this.end;
+                this.size++;
             }
         }
 
-        // Iterativo
         public Veiculo removerFim(){
-            
+            CellVeiculo pointerCellVeiculo = this.init;
+            if (this.init != null || this.end != null || this.size > 0) {
+                while(pointerCellVeiculo.prox.prox != null){ // vê se o proximo possui proximo, irá caminhar até que pointerCellVeiculo seja igual ao penultimo
+                    pointerCellVeiculo = pointerCellVeiculo.prox;
+                }
+                CellVeiculo ultimo = pointerCellVeiculo.prox;
+                pointerCellVeiculo.prox = null; // Retira o referencial da ultima celula, ou seja, a exclui, a unica referencia que tem ela agora é a ultimo!
+                this.end = pointerCellVeiculo; // Ultimo elemento agora é o penultimo de antes!
+                this.size--;
+                return ultimo.val; // Deve retornar um veiculo e não a celula!
+            }
+
+            return null; // Retorna null quando não há o que remover!
         }
 
-        public static Veiculo removerFimRecursivo(Veiculo firstVeiculo){
-            if(firstVeiculo.prox == null){
-                firstVeiculo
+        public Veiculo removerInicio(){
+            if (this.init != null || this.end != null || this.size > 0) {
+                CellVeiculo tempVeiculo = this.init;
+                this.init = this.init.prox; // this.init agora é o proximo dele! Perde referencial e afins
+                this.size = this.size - 1;
+
+                return tempVeiculo.val;
+            }
+            return null; // Retorna null quando não há o que remover!
+        }
+
+        public Veiculo remover(int pos){
+            if (this.init != null || this.end != null || this.size > 0) {
+                CellVeiculo pointerVeiculo = this.init;
+                CellVeiculo temp;
+                int i;
+                for(i = 0; i < pos-1; i++){
+                    pointerVeiculo = pointerVeiculo.prox;
+                }
+                temp = pointerVeiculo.prox;
+                pointerVeiculo.prox = pointerVeiculo.prox.prox; // Salta o proximo elemento de pos-1 para o proximo do proximo, ignorando o proximo, que é o que queremos remover.
+                return temp.val;
+            }
+            return null;
+        }
+
+        public void inserir(int pos, Veiculo entryVeiculo){
+            if (this.init != null || this.end != null || this.size > 0) {
+                CellVeiculo pointerVeiculo = this.init;
+                CellVeiculo temp = new CellVeiculo(entryVeiculo);
+                int i;
+                for(i = 0; i < pos-1; i++){
+                    pointerVeiculo = pointerVeiculo.prox;
+                }
+                temp.prox = pointerVeiculo.prox;
+                pointerVeiculo.prox = temp;
             }
         }
     }
@@ -238,42 +298,37 @@ public class Main{
 
     public static void main(String[] args){
         Locale.setDefault(Locale.US);
-        Veiculo[] veiculos = LeitorCsv.ler("../veiculos.csv");
-        Veiculo[] vetorListado = new Veiculo[1];
+        Veiculo[] veiculos = LeitorCsv.ler("tps\\entrada e saida\\tp2\\TP02Q09 - Lista com Alocacao Sequencial em Java\\veiculos.csv");
+        ListVeiculo listaVeiculos = new ListVeiculo();
         Scanner scan = new Scanner(System.in);
-        int id = scan.nextInt();
-        boolean hasVeiculo = false;
-        if(id != -1){
-            hasVeiculo = true;
-            vetorListado[0] = Veiculo.searchLinearVeiculoId(veiculos,id);
-        }
+        int id = 0;
         while(id != -1){
             id = scan.nextInt();
             if(id != -1){ // O -1 é apenas a sentinela, não deve entrar no vetor
-                vetorListado = Veiculo.addVeiculo(vetorListado, Veiculo.searchLinearVeiculoId(veiculos,id));
+                listaVeiculos.inserirFim(Veiculo.searchLinearVeiculoId(veiculos,id));
             }
         }
-        if(hasVeiculo){ 
-            /**
-             *
-             * Ordena usando ordenação por inserção
-             *
-             */
-
-            for(int i = 1; i < vetorListado.length; i++){
-                Veiculo temp = vetorListado[i]; // Guarda o elemento a ser inserido
-                int j = i - 1;
-                // Desloca para a direita todos os que vêm depois de temp
-                while(j >= 0 && vetorListado[j].getMarca().compareTo(temp.getMarca()) > 0){
-                    vetorListado[j + 1] = vetorListado[j];
-                    j--;
-                }
-                vetorListado[j + 1] = temp; // Insere no buraco encontrado
+        int q = scan.nextInt();
+        for(int i = 0; i < q; i++){
+            String f = scan.next();
+            int pI = scan.nextInt(); // O inteiro padrão que sempre terá | pInclusive
+            // Provavelmente dá para trocar por switch, mas não vou fazer pq não sei ainda como faz isso em JAVA e nem o comportamento da linguagem
+            if (f.equals("RF")) {
+                listaVeiculos.removerFim();
+            } else if (f.equals("RI")) { // Só é verificado caso RF seja falso!
+                listaVeiculos.removerInicio();
+            } else if (f.equals("R*")) {
+                listaVeiculos.remover(pI);
+            } else if (f.equals("II")) {
+                listaVeiculos.inserirInicio(Veiculo.searchLinearVeiculoId(veiculos,pI));
+            } else if(f.equals("IF")){
+                listaVeiculos.inserirFim(Veiculo.searchLinearVeiculoId(veiculos,pI));
             }
-
-            for(int i = 0; i < vetorListado.length; i++){
-                System.out.println(vetorListado[i].format());
+            else if (f.equals("I*")){
+                int pE = scan.nextInt(); // O inteiro padrão que poderá haver | pExclusive
+                listaVeiculos.inserir(pI, Veiculo.searchLinearVeiculoId(veiculos, pE));
             }
         }
+        System.out.println(listaVeiculos.formatAll());
     }
 }
