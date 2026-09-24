@@ -1,5 +1,6 @@
 import java.io.File;
 import java.util.Locale;
+import java.text.DecimalFormat;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
@@ -114,13 +115,14 @@ public class Main{
         }
         
         public String format(){
+            DecimalFormat df = new DecimalFormat("#.##");
             String returnValue;
             String combValue = "[";
             for(int i = 0; i < this.combustivel.length-1; i++){
                 combValue = combValue + this.combustivel[i] + ",";
             }
             combValue = combValue + this.combustivel[this.combustivel.length-1] + "]";
-            returnValue = String.format("[%d ## %s ## %s ## %d ## %s ## %s ## %d ## %f ## %s ## %s ## %f ## %f ## %f ## %b ## %s]",this.id,this.marca,this.modelo,this.ano,this.categoria,combValue, this.cilindros, this.cilindrada,this.transmissao,this.tracao,this.consumo_cidade, this.consumo_estrada,this.co2,this.turbo,this.data_registro.format());
+            returnValue = String.format("[%d ## %s ## %s ## %d ## %s ## %s ## %d ## %s ## %s ## %s ## %s ## %s ## %s ## %b ## %s]",this.id,this.marca,this.modelo,this.ano,this.categoria,combValue,this.cilindros, df.format(this.cilindrada),this.transmissao,this.tracao,df.format(this.consumo_cidade), df.format(this.consumo_estrada),df.format(this.co2),this.turbo,this.data_registro.format());
             return returnValue;
         }
 
@@ -133,6 +135,14 @@ public class Main{
             returnVeiculo[newtamanho - 1] = veiculoInput;
 
             return returnVeiculo;
+        }
+
+        public static Veiculo[] swap(Veiculo[] entryVector, int posX, int posY){
+            Veiculo tempVeiculo = entryVector[posX];
+            entryVector[posX] = entryVector[posY];
+            entryVector[posY] = tempVeiculo;
+
+            return entryVector;
         }
     }
 
@@ -158,6 +168,73 @@ public class Main{
         }
     }
 
+    public static class CellVeiculo{
+        private Veiculo val;
+        private CellVeiculo prox;
+
+        public CellVeiculo(){
+            this.val = null;
+            this.prox = null;
+        }
+
+        public CellVeiculo(Veiculo val){
+            this.val = val;
+            this.prox = null;
+        }
+    }
+
+    public static class ListVeiculo{
+        public CellVeiculo init;
+        public CellVeiculo end;
+        public int size;
+
+        public ListVeiculo(){
+            this.init = null;
+            this.end = null;
+            this.size = 0;
+        }
+
+        public void inserirInicio(Veiculo entryVeiculo){
+            CellVeiculo entryVeiculo = new CellVeiculo(entryVeiculo); // CellVeiculo entryVeiculo | entryVeiculo.prox() -> null
+            if(this.init != null || this.end != null){
+                CellVeiculo CellTemp = this.init; 
+                this.init = entryVeiculo;
+                this.init.prox = CellTemp;
+                this.size++;
+            } else{
+                this.init = entryVeiculo;
+                this.init.prox = this.end;
+                this.end = entryVeiculo;
+            }
+        }
+
+        public void inserirFim(Veiculo entryVeiculo){
+            CellVeiculo entryVeiculo = new CellVeiculo(entryVeiculo);
+            if(this.init != null || this.end != null){
+                CellVeiculo CellTemp = this.end;
+                this.end.prox = entryVeiculo;
+                this.end = entryVeiculo;
+                this.end.prox = null;
+                this.size++;
+            } else{
+                this.init = entryVeiculo;
+                this.end = entryVeiculo;
+                this.init.prox = this.end;
+            }
+        }
+
+        // Iterativo
+        public Veiculo removerFim(){
+            
+        }
+
+        public static Veiculo removerFimRecursivo(Veiculo firstVeiculo){
+            if(firstVeiculo.prox == null){
+                firstVeiculo
+            }
+        }
+    }
+
 
     public static void main(String[] args){
         Locale.setDefault(Locale.US);
@@ -172,9 +249,28 @@ public class Main{
         }
         while(id != -1){
             id = scan.nextInt();
-            vetorListado = Veiculo.addVeiculo(vetorListado, Veiculo.searchLinearVeiculoId(veiculos,id));
+            if(id != -1){ // O -1 é apenas a sentinela, não deve entrar no vetor
+                vetorListado = Veiculo.addVeiculo(vetorListado, Veiculo.searchLinearVeiculoId(veiculos,id));
+            }
         }
-        if(hasVeiculo){
+        if(hasVeiculo){ 
+            /**
+             *
+             * Ordena usando ordenação por inserção
+             *
+             */
+
+            for(int i = 1; i < vetorListado.length; i++){
+                Veiculo temp = vetorListado[i]; // Guarda o elemento a ser inserido
+                int j = i - 1;
+                // Desloca para a direita todos os que vêm depois de temp
+                while(j >= 0 && vetorListado[j].getMarca().compareTo(temp.getMarca()) > 0){
+                    vetorListado[j + 1] = vetorListado[j];
+                    j--;
+                }
+                vetorListado[j + 1] = temp; // Insere no buraco encontrado
+            }
+
             for(int i = 0; i < vetorListado.length; i++){
                 System.out.println(vetorListado[i].format());
             }
